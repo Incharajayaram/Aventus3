@@ -1,0 +1,47 @@
+# Dependency directories
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Debug
+*.swp
+*.swo
+*.swn
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Optional build output
+dist/
+build/
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# VSCode settings
+.vscode/
+
+# dotenv environment files
+.env.*.local
+.env.local
+
+# Output of 'npm pack'
+*.tgz
+
+# TypeScript
+*.tsbuildinfo
