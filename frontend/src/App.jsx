@@ -1,28 +1,54 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ProtectedRoute from "../ProtectedRoute";
+import React, { useEffect, useState } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Intro from "./pages/Intro";
+import DashboardPage from "./pages/DashboardPage";
+import Layout from "./components/Layout";
+
+const url = "http://localhost:8000";
+
 function App() {
-  const url = "http://localhost:8000";
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const location = useLocation();
+
+  // Update login state on route change (covers logout)
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, [location.pathname]);
 
   return (
     <>
-    <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-    <Routes>
-      <Route path="/login" element={<Login url={url} />} />
-      <Route path="/signup" element={<Signup url={url} />} />
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
-      {/* Protected routes */}
-      <Route element={<ProtectedRoute />}>
-        {/* Add your protected routes here */}
-      </Route>
+      <Routes>
+        {/* ----- Auth pages (no layout) ----- */}
+        <Route path="/login" element={<Login url={url} />} />
+        <Route path="/signup" element={<Signup url={url} />} />
 
-      {/* Fallback route */}
-      <Route path="*" element={<Login url={url} />} />
-    </Routes>
+        {/* ----- Routes wrapped by Layout ----- */}
+        <Route element={<Layout />}>
+          <Route
+            path="/"
+            element={
+              isLoggedIn ? <Navigate to="/dashboard" replace /> : <Intro />
+            }
+          />
+
+          <Route
+            path="/dashboard"
+            element={
+              isLoggedIn ? <DashboardPage /> : <Navigate to="/" replace />
+            }
+          />
+        </Route>
+
+        {/* ----- Catch-all ----- */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   );
 }
