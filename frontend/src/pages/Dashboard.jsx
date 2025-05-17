@@ -64,37 +64,30 @@ const Dashboard = () => {
   const extractTextFromPDF = async (pdfFile) => {
     try {
       setIsLoading(true);
-
+  
       if (!window.pdfjsLib) {
         setResponse("PDF.js library not loaded yet. Please try again.");
         setIsLoading(false);
         return null;
       }
-
-      // Read the file as ArrayBuffer
+  
       const arrayBuffer = await readFileAsArrayBuffer(pdfFile);
-
-      // Use PDF.js
       const pdfjsLib = window.pdfjsLib;
-
-      // Load the PDF document
       const loadingTask = pdfjsLib.getDocument(arrayBuffer);
       const pdf = await loadingTask.promise;
-
-      // Extract text from all pages
+  
       let fullText = "";
       const numPages = pdf.numPages;
-
+  
       for (let i = 1; i <= numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items.map((item) => item.str).join(" ");
         fullText += `Page ${i}:\n${pageText}\n\n`;
       }
-
-      setResponse(fullText);
+  
       setIsLoading(false);
-      return fullText;
+      return fullText;  // DO NOT set response here
     } catch (error) {
       console.error("PDF extraction error:", error);
       setIsLoading(false);
@@ -102,40 +95,59 @@ const Dashboard = () => {
       return null;
     }
   };
-
+  
   const handleSubmit = async () => {
-    // Reset response
-    setResponse("");
-
-    // If there's a file and it's a PDF, extract text from it
+    setResponse(""); // Clear previous response
+    setIsLoading(true);
+  
+    let inputText = "";
+  
     if (file) {
       if (file.type === "application/pdf") {
-        await extractTextFromPDF(file);
+        const extractedText = await extractTextFromPDF(file);
+        if (!extractedText) {
+          setIsLoading(false);
+          return;
+        }
+        inputText = extractedText;
       } else {
-        setResponse(
-          `The file ${file.name} is not a PDF file. Please upload a PDF document.`
-        );
+        setResponse("Please upload a PDF file only.");
+        setIsLoading(false);
+        return;
       }
-    } else if (message) {
-      // Simple logic for text messages (same as original)
-      const suspiciousWords = ["inject", "drop", "delete", "prompt"];
-      const isInjection = suspiciousWords.some((w) =>
-        message.toLowerCase().includes(w)
-      );
-
-      if (isInjection) {
-        setResponse("⚠️ Detected potential prompt injection!");
-      } else {
-        setResponse(
-          `LLM Response for "${message}" using model: ${
-            selectedModels[0] || "none"
-          }`
-        );
-      }
+    } else if (message.trim()) {
+      inputText = message.trim();
     } else {
       setResponse("Please enter a message or upload a PDF file.");
+      setIsLoading(false);
+      return;
+    }
+  
+    try {
+      const res = await fetch("http://localhost:5000/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
+  
+      const result = await res.json();
+  
+      if (res.ok) {
+        setResponse(`🛡️ ${result.result} (Prediction: ${result.prediction})`);
+      } else {
+        setResponse(`Error from server: ${result.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error sending to Flask:", error);
+      setResponse("❌ Failed to reach Flask backend.");
+    } finally {
+      setIsLoading(false);
     }
   };
+  
+  
 
   return (
     <div className="h-screen flex justify-center items-center bg-gradient-to-br from-black via-[#0b220b] to-black px-6">

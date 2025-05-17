@@ -1,13 +1,14 @@
 import express from "express";
 import cors from "cors";
-//import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.route.js";
+import router from "./routes/model.routes.js";
+// import modelRoutes from "./routes/model.route.js"; // ✅ import
 
 const app = express();
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     credentials: true,
   })
 );
@@ -17,7 +18,6 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 
 app.use("/users", userRoutes);
-
-//app.use(cookieParser());
+app.use("/model", router); // ✅ register
 
 export { app };
