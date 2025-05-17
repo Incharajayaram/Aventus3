@@ -5,11 +5,36 @@ import { Mail, Lock, User } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const Signup = () => {
+const Signup = ({ url }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch(`${url}/users/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Account created successfully! Redirecting to login...");
+        setTimeout(() => navigate("/login"), 2000);
+      } else {
+        toast.error(data.message || "Signup failed");
+      }
+    } catch (err) {
+      toast.error("Error during signup: " + err.message);
+    }
+  };
 
   return (
     <div className="h-screen flex justify-center items-center bg-gradient-to-br from-black via-[#0b220b] to-black px-4">
@@ -23,7 +48,7 @@ const Signup = () => {
         <h2 className="text-green-400 text-3xl font-bold mb-6 text-center font-mono tracking-wide">
           Create an Account
         </h2>
-        <form className="space-y-5">
+        <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="relative">
             <User className="absolute left-3 top-3 text-green-400" size={20} />
             <input
