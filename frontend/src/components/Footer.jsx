@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 const Footer = () => {
   return (
     <motion.footer
-      className="bg-[#0e1a0e] text-green-300 text-center py-4 border-t border-green-700 mt-10"
+      className="bg-[#0e1a0e] text-green-300 text-center py-5 border-t border-green-700 font-mono"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
       <p className="text-sm">
-        © {new Date().getFullYear()} GreenMonitor. All rights reserved.
+        © {new Date().getFullYear()} PromptShield. All rights reserved.
       </p>
     </motion.footer>
   );
