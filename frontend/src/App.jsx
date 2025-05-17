@@ -1,24 +1,29 @@
+import React from "react";
 import { Routes, Route } from "react-router-dom";
-import ProtectedRoute from "../ProtectedRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-
+import ProtectedRoute from "../ProtectedRoute";
+import { Toaster } from "react-hot-toast";
 
 function App() {
+  const url = "http://localhost:8000";
+
   return (
+    <>
+    <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={<Login url={url} />} />
+      <Route path="/signup" element={<Signup url={url} />} />
 
       {/* Protected routes */}
       <Route element={<ProtectedRoute />}>
-        
-        {/* add more protected routes here */}
+        {/* Add your protected routes here */}
       </Route>
 
       {/* Fallback route */}
-      <Route path="*" element={<Login/>} />
+      <Route path="*" element={<Login url={url} />} />
     </Routes>
+    </>
   );
 }
 
