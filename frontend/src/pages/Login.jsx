@@ -4,10 +4,7 @@ import { motion } from "framer-motion";
 import { Mail, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 
-<<<<<<< HEAD
-=======
 
->>>>>>> c1053f21c62505e7c069f7ce711a6f3f09f82aae
 const UserLogin = ({ url }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +21,6 @@ const UserLogin = ({ url }) => {
         },
         // Remove credentials: "include"
         body: JSON.stringify({ email, password }),
-      });
       });      
 
       const data = await res.json();
@@ -74,7 +70,7 @@ const UserLogin = ({ url }) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
+              placeholder=""
               required
             />
           </div>
