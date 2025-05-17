@@ -170,9 +170,7 @@ const Dashboard = () => {
               </div>
             </label>
             {file && file.type !== "application/pdf" && (
-              <p className="mt-2 text-red-400 text-sm">
-                Please select a PDF file
-              </p>
+              <p className="mt-2 text-red-400 text-sm">Please select a PDF file</p>
             )}
           </div>
 
@@ -212,23 +210,25 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {/* RIGHT: result */}
-        <div className="w-1/2 flex flex-col">
-          <h2 className="text-green-400 text-3xl font-bold mb-2 font-mono tracking-wide text-center">
-            Response
-          </h2>
-          <div className="h-64 p-6 bg-transparent border border-green-700/30 text-white rounded-lg overflow-auto whitespace-pre-wrap shadow-inner font-mono">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-green-400">
-                  Extracting text from PDF...
-                </div>
-              </div>
-            ) : (
-              response || "The response will appear here..."
-            )}
-          </div>
-        </div>
+      {/* RIGHT: result */}
+<div className="w-1/2 flex flex-col">
+  <h2 className="text-green-400 text-3xl font-bold mb-2 font-mono tracking-wide text-center">
+    Response
+  </h2>
+  <div
+    tabIndex={0}
+    className="h-64 p-6 bg-transparent border border-green-700/30 text-white rounded-lg overflow-auto whitespace-pre-wrap shadow-inner font-mono"
+  >
+    {isLoading ? (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-green-400">Extracting text from PDF...</div>
+      </div>
+    ) : (
+      response || "The response will appear here..."
+    )}
+  </div>
+</div>
+
       </div>
     </div>
   );
