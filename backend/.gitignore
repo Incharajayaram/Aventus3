@@ -1,56 +1,47 @@
-# Node modules
+# Dependency directories
 node_modules/
 
+# Environment variables
+.env
+
 # Logs
-logs/
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
-.env
-.env.*.local
-
-# Build output
-dist/
-build/
-.next/
-.out/
-coverage/
-
-# OS-specific files
-.DS_Store
-Thumbs.db
-
-# Editor-specific files
-.vscode/
-.idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-
-# Optional npm cache directory
-.npm/
-
-# Debugging output
-debug.log
-
-# PM2 process file
+# Runtime data
 pids
 *.pid
 *.seed
+*.pid.lock
 
-# Test coverage
-.nyc_output/
+# Debug
+*.swp
+*.swo
+*.swn
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Optional build output
+dist/
+build/
+
+# Coverage directory used by tools like istanbul
 coverage/
 
-# Parcel cache
-.cache/
+# VSCode settings
+.vscode/
 
-# eslint cache
-.eslintcache
+# dotenv environment files
+.env.*.local
+.env.local
 
-# Optional REPL history
-.node_repl_history
+# Output of 'npm pack'
+*.tgz
+
+# TypeScript
+*.tsbuildinfo
