@@ -1,2 +1,5 @@
 \venv
 \venv_new
+
+# Ignore the local prompt-shield model
+base_model/deberta-promptShield/
