@@ -1,16 +1,13 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import DashboardPage from "./pages/DashboardPage"
 import ProtectedRoute from "../ProtectedRoute";
-import IntroPage from "./pages/Intro"; // Make sure this file exists
-import Layout from "./components/Layout";
 import { Toaster } from "react-hot-toast";
+import DashboardPage from "./pages/DashboardPage";
 
 function App() {
   const url = "http://localhost:8000";
-  const isLoggedIn = !!localStorage.getItem("token");
 
   return (
     <>
@@ -18,25 +15,14 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login url={url} />} />
         <Route path="/signup" element={<Signup url={url} />} />
+        <Route path="/dashboard" element={<DashboardPage/>} />
 
-        <Route element={<Layout />}>
-          <Route
-            path="/"
-            element={isLoggedIn ? <Navigate to="/dashboard" /> : <IntroPage />}
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Add more protected/public layout-wrapped routes here */}
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          {/* Add your protected routes here */}
         </Route>
 
-        {/* Fallback Route */}
+        {/* Fallback route */}
         <Route path="*" element={<Login url={url} />} />
       </Routes>
     </>
