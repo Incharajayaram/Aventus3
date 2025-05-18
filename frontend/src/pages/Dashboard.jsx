@@ -79,24 +79,57 @@ export default function Dashboard() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/analyze", {
+      // 2. Call analyze API first
+      const analyzeRes = await fetch("http://localhost:5000/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText }),
       });
-      const data = await res.json();
+      const analyzeData = await analyzeRes.json();
 
-      if (res.ok) {
-        const injected = data.prediction === 1;
-        setIsAlert(injected);
+      if (!analyzeRes.ok) {
+        setResponse(`Analyze error: ${analyzeData.error || "Unknown"}`);
+        setIsLoading(false);
+        return;
+      }
 
-        if (injected) {
-          setResponse(
-            "⚠️ Prompt-injection suspected!\n\n💡 Rephrase or remove instructions that override system or developer policies."
-          );
-        } else {
+      const injected = analyzeData.prediction === 1;
+      setIsAlert(injected);
+      setResponse(
+        injected
+          ? "⚠️ Prompt-injection suspected!\n\n💡 Rephrase or remove instructions that override system or developer policies."
+          : "✅ No injection patterns found.\n\n👍 Looks good, but always double-check sensitive requests."
+      );
+
+      // 3. If LLaMA selected AND analyze safe (0), call LLaMA ask API
+      if (!injected && selectedModels.includes("LLaMA")) {
+        // Show loading message for LLaMA call
+        setResponse((r) => r + "\n\n⏳ Getting LLaMA response...");
+
+        try {
+          const llamaRes = await fetch("http://localhost:5000/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: inputText }),
+          });
+          const llamaData = await llamaRes.json();
+
+          if (llamaRes.ok && llamaData.output) {
+            setResponse(
+              (r) => r + `\n\n🦙 LLaMA response:\n${llamaData.output}`
+            );
+          }
+        } catch (e) {
+          setResponse((r) => r + "\n\n🦙 Failed to reach LLaMA backend.");
+        }
+      }
+
+      // Gemini model selected
+      if (!injected && selectedModels.includes("Gemini")) {
+        try {
+          setResponse((r) => r + "\n\n⏳ Getting Gemini response...");
+
           let modelInstruction = "";
-
           switch (selectedModels[0]) {
             case "GPT-4":
               modelInstruction = "You are GPT-4. ";
@@ -119,59 +152,49 @@ export default function Dashboard() {
 
           const fullPrompt = `${modelInstruction}Analyze and respond to the following input:\n\n${inputText}`;
 
-          if (selectedModels.length > 0) {
-            try {
-              const geminiRes = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    contents: [
-                      {
-                        parts: [{ text: fullPrompt }],
-                      },
-                    ],
-                  }),
-                }
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [{ text: fullPrompt }],
+                  },
+                ],
+              }),
+            }
+          );
+
+          const geminiData = await geminiRes.json();
+
+          if (geminiRes.ok) {
+            const geminiText =
+              geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+            if (geminiText.trim() === "") {
+              setResponse(
+                (r) => r + "\n\n⚠️ Gemini response was empty. Please try again."
               );
-
-              const geminiData = await geminiRes.json();
-
-              if (geminiRes.ok) {
-                const geminiText =
-                  geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-                if (geminiText.trim() === "") {
-                  setResponse(
-                    "✅ No injection found.\n\n⚠️ Gemini response was empty. Please try again."
-                  );
-                } else {
-                  setResponse(
-                    `✅ No injection patterns found.\n\n🤖 ${selectedModels[0]} says:\n\n${geminiText}`
-                  );
-                }
-              } else {
-                setResponse(
-                  `✅ No injection found.\n\n⚠️ Gemini API error: ${JSON.stringify(
-                    geminiData.error || geminiData
-                  )}`
-                );
-              }
-            } catch (err) {
-              setResponse(`❌ Gemini fetch error: ${err.message}`);
+            } else {
+              setResponse((r) => r + `\n\n🤖 Gemini says:\n\n${geminiText}`);
             }
           } else {
             setResponse(
-              "✅ No injection patterns found.\n\nℹ️ No model selected for further response."
+              (r) =>
+                r +
+                `\n\n⚠️ Gemini API error: ${JSON.stringify(
+                  geminiData.error || geminiData
+                )}`
             );
           }
+        } catch (err) {
+          setResponse((r) => r + `\n\n❌ Gemini fetch error: ${err.message}`);
         }
-      } else {
-        setResponse(`Server error: ${data.error || "Unknown"}`);
       }
     } catch (e) {
-      setResponse("❌ Failed to reach Flask backend.");
+      setResponse("❌ Failed to reach Flask analyze backend.");
     } finally {
       setIsLoading(false);
     }
@@ -267,7 +290,7 @@ export default function Dashboard() {
                 <span className="text-green-400">Getting response...</span>
               </div>
             ) : (
-              response || "The response will appear here..."
+              response || "The response will appear here."
             )}
           </div>
         </div>

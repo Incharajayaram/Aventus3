@@ -1,0 +1,6 @@
+2025-05-18 07:31:36,666 - promptshield - INFO - Loading model from: C:\Users\harsh\OneDrive\Desktop\Aventus3\base_model\deberta-promptShield
+2025-05-18 07:31:38,518 - promptshield - INFO - Using device: cpu
+2025-05-18 07:31:38,671 - promptshield - INFO - Model loaded and tested successfully
+2025-05-18 07:31:38,683 - werkzeug - WARNING -  * Debugger is active!
+2025-05-18 07:31:38,686 - werkzeug - INFO -  * Debugger PIN: 959-938-096
+2025-05-18 07:32:34,049 - werkzeug - INFO -  * Detected change in 'C:\\Users\\harsh\\OneDrive\\Desktop\\Aventus3\\model_backend\\app.py', reloading
