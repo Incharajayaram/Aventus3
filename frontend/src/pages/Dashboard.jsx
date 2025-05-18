@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
 
-const models = ["GPT-4", "Claude", "LLaMA", "Qwen", "Granite"];
+const models = ["GPT-4", "Gemini", "LLaMA", "Qwen", "Granite"];
 
 export default function Dashboard() {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState(null);
   const [selectedModels, setSelectedModels] = useState([]);
-  const [response, setResponse] = useState(""); // friendly text
-  const [isAlert, setIsAlert] = useState(false); // true ⇒ injection
+  const [response, setResponse] = useState("");
+  const [isAlert, setIsAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pdfJsLoaded, setPdfJsLoaded] = useState(false);
 
-  /* ───── Load PDF.js once ───── */
   useEffect(() => {
     if (window.pdfjsLib) {
       setPdfJsLoaded(true);
@@ -28,9 +27,8 @@ export default function Dashboard() {
     document.body.appendChild(s);
   }, []);
 
-  /* ───── Helpers ───── */
   const toggleModel = (m) =>
-    setSelectedModels((p) => (p.includes(m) ? [] : [m]));
+    setSelectedModels((prev) => (prev.includes(m) ? [] : [m]));
 
   const readFileAsArrayBuffer = (f) =>
     new Promise((resolve, reject) => {
@@ -53,13 +51,11 @@ export default function Dashboard() {
     return text;
   };
 
-  /* ───── Submit ───── */
   const handleSubmit = async () => {
     setIsAlert(false);
     setResponse("");
     setIsLoading(true);
 
-    /* 1. Build inputText */
     let inputText = "";
     if (file) {
       if (file.type !== "application/pdf") {
@@ -123,9 +119,61 @@ export default function Dashboard() {
               (r) => r + `\n\n🦙 LLaMA response:\n${llamaData.output}`
             );
           }
-          
         } catch (e) {
           setResponse((r) => r + "\n\n🦙 Failed to reach LLaMA backend.");
+        }
+      }
+
+      // Gemini model selected
+      if (!injected && selectedModels.includes("Gemini")) {
+        try {
+          setResponse((r) => r + "\n\n⏳ Getting Gemini response...");
+
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${
+              import.meta.env.VITE_GEMINI_API_KEY
+            }`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: inputText,
+                      },
+                    ],
+                  },
+                ],
+              }),
+            }
+          );
+
+          const geminiData = await geminiRes.json();
+
+          if (geminiRes.ok) {
+            const geminiText =
+              geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+            if (geminiText.trim() === "") {
+              setResponse(
+                (r) => r + "\n\n⚠️ Gemini response was empty. Please try again."
+              );
+            } else {
+              setResponse((r) => r + `\n\n🤖 Gemini says:\n\n${geminiText}`);
+            }
+          } else {
+            setResponse(
+              (r) =>
+                r +
+                `\n\n⚠️ Gemini API error: ${JSON.stringify(
+                  geminiData.error || geminiData
+                )}`
+            );
+          }
+        } catch (err) {
+          setResponse((r) => r + `\n\n❌ Gemini fetch error: ${err.message}`);
         }
       }
     } catch (e) {
@@ -135,7 +183,6 @@ export default function Dashboard() {
     }
   };
 
-  /* ───── JSX ───── */
   return (
     <div className="h-screen flex justify-center items-center bg-gradient-to-br from-black via-[#0b220b] to-black px-6">
       <div className="bg-[#0d1c0d] p-10 rounded-2xl w-full max-w-6xl flex gap-10 border border-green-700/30 shadow-[0_0_25px_#00994444]">
@@ -153,7 +200,6 @@ export default function Dashboard() {
             onChange={(e) => setMessage(e.target.value)}
           />
 
-          {/* PDF upload */}
           <div>
             <h3 className="text-green-400 font-semibold mb-2 font-mono">
               Or upload a PDF document
@@ -171,7 +217,6 @@ export default function Dashboard() {
             </label>
           </div>
 
-          {/* Model picker */}
           <div>
             <h3 className="text-green-400 font-semibold mb-2 font-mono">
               Select Model
@@ -207,12 +252,11 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* RIGHT – Response */}
+        {/* RIGHT */}
         <div className="w-1/2 flex flex-col">
           <h2 className="text-green-400 text-3xl font-bold mb-2 font-mono text-center">
             Response
           </h2>
-
           <div
             tabIndex={0}
             className={`h-64 p-6 rounded-lg overflow-auto whitespace-pre-wrap border shadow-inner font-mono
