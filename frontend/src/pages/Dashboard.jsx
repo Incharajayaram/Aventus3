@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const models = ["GPT-4", "Gemini", "LLaMA", "Qwen", "Granite"];
+const models = ["Gemini", "LLaMA", "Qwen", "Granite"];
 
 export default function Dashboard() {
   const [message, setMessage] = useState("");
