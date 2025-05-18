@@ -82,28 +82,54 @@ export default function Dashboard() {
       return;
     }
 
-    /* 2. Send to Flask */
     try {
-      const res = await fetch("http://localhost:5000/analyze", {
+      // 2. Call analyze API first
+      const analyzeRes = await fetch("http://localhost:5000/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText }),
       });
-      const data = await res.json(); // { result, prediction }
+      const analyzeData = await analyzeRes.json();
 
-      if (res.ok) {
-        const injected = data.prediction === 1;
-        setIsAlert(injected);
-        setResponse(
-          injected
-            ? "⚠️  Prompt-injection suspected!\n\n💡 Rephrase or remove instructions that override system or developer policies."
-            : "✅ No injection patterns found.\n\n👍 Looks good, but always double-check sensitive requests."
-        );
-      } else {
-        setResponse(`Server error: ${data.error || "Unknown"}`);
+      if (!analyzeRes.ok) {
+        setResponse(`Analyze error: ${analyzeData.error || "Unknown"}`);
+        setIsLoading(false);
+        return;
+      }
+
+      const injected = analyzeData.prediction === 1;
+      setIsAlert(injected);
+      setResponse(
+        injected
+          ? "⚠️  Prompt-injection suspected!\n\n💡 Rephrase or remove instructions that override system or developer policies."
+          : "✅ No injection patterns found.\n\n👍 Looks good, but always double-check sensitive requests."
+      );
+
+      // 3. If LLaMA selected AND analyze safe (0), call LLaMA ask API
+      if (!injected && selectedModels.includes("LLaMA")) {
+        // Show loading message for LLaMA call
+        setResponse((r) => r + "\n\n⏳ Getting LLaMA response...");
+
+        try {
+          const llamaRes = await fetch("http://localhost:5000/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: inputText }),
+          });
+          const llamaData = await llamaRes.json();
+
+          if (llamaRes.ok && llamaData.output) {
+            setResponse(
+              (r) => r + `\n\n🦙 LLaMA response:\n${llamaData.output}`
+            );
+          }
+          
+        } catch (e) {
+          setResponse((r) => r + "\n\n🦙 Failed to reach LLaMA backend.");
+        }
       }
     } catch (e) {
-      setResponse("❌ Failed to reach Flask backend.");
+      setResponse("❌ Failed to reach Flask analyze backend.");
     } finally {
       setIsLoading(false);
     }
@@ -203,7 +229,7 @@ export default function Dashboard() {
                 <span className="text-green-400">Getting response...</span>
               </div>
             ) : (
-              response || "The response will appear here..."
+              response || "The response will appear here."
             )}
           </div>
         </div>
