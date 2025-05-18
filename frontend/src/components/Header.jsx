@@ -36,7 +36,7 @@ const Header = () => {
             className="drop-shadow-[0_0_6px_#00ff8899] animate-spin-slow"
           />
           <span className="font-mono text-2xl font-extrabold tracking-wider drop-shadow-[0_0_6px_#00ff8899]">
-            PromptShield
+            PromptArmour
           </span>
         </Link>
 

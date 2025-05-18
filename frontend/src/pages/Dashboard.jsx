@@ -92,11 +92,34 @@ export default function Dashboard() {
 
         if (injected) {
           setResponse(
-            "⚠️  Prompt-injection suspected!\n\n💡 Rephrase or remove instructions that override system or developer policies."
+            "⚠️ Prompt-injection suspected!\n\n💡 Rephrase or remove instructions that override system or developer policies."
           );
         } else {
-          // Gemini model selected
-          if (selectedModels.includes("Gemini")) {
+          let modelInstruction = "";
+
+          switch (selectedModels[0]) {
+            case "GPT-4":
+              modelInstruction = "You are GPT-4. ";
+              break;
+            case "Gemini":
+              modelInstruction = "You are Gemini. ";
+              break;
+            case "LLaMA":
+              modelInstruction = "You are Meta's LLaMA model. ";
+              break;
+            case "Qwen":
+              modelInstruction = "You are Qwen, the Alibaba AI model. ";
+              break;
+            case "Granite":
+              modelInstruction = "You are Granite, a secure and robust LLM. ";
+              break;
+            default:
+              modelInstruction = "";
+          }
+
+          const fullPrompt = `${modelInstruction}Analyze and respond to the following input:\n\n${inputText}`;
+
+          if (selectedModels.length > 0) {
             try {
               const geminiRes = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
@@ -106,11 +129,7 @@ export default function Dashboard() {
                   body: JSON.stringify({
                     contents: [
                       {
-                        parts: [
-                          {
-                            text: inputText,
-                          },
-                        ],
+                        parts: [{ text: fullPrompt }],
                       },
                     ],
                   }),
@@ -129,7 +148,7 @@ export default function Dashboard() {
                   );
                 } else {
                   setResponse(
-                    `✅ No injection patterns found.\n\n🤖 Gemini says:\n\n${geminiText}`
+                    `✅ No injection patterns found.\n\n🤖 ${selectedModels[0]} says:\n\n${geminiText}`
                   );
                 }
               } else {

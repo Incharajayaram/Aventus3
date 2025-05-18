@@ -72,7 +72,7 @@ const Intro = () => {
         </div>
 
         <h1 className="text-6xl font-extrabold font-mono text-green-400 drop-shadow-[0_0_25px_#00cc5599] mb-4">
-          PromptShield
+          PromptArmour
         </h1>
         <p className="text-lg text-green-200 leading-relaxed">
           Detects and neutralises prompt-injection attacks in chats and uploaded
