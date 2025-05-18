@@ -106,6 +106,43 @@ def ask():
 
     return jsonify({"flagged": False, "output": answer})
 
+@app.post("/explain")
+@app.route("/explain", methods=["POST"])
+def explain():
+    data = request.get_json(silent=True)
+    prompt = data.get("text", "")
+    
+    print(f"[REQUEST] POST /explain with prompt: {prompt}", file=sys.stderr)
+
+    try:
+        # Step 1: Run classifier
+        flagged = is_injection(prompt)
+
+        if flagged:
+            # Step 2: Ask Mistral to explain why it's a prompt injection
+            cot_prompt = (
+                "You are a cybersecurity expert. "
+                "Explain in detail why the following prompt is a prompt injection attack: "
+                f"\n\n---\n{prompt}\n---\n"
+                "List the red flags and reasoning clearly."
+            )
+            explanation = ollama_generate(cot_prompt, stream=False)
+        else:
+            explanation = "This prompt appears safe and does not show signs of injection."
+
+        print(f"[EXPLAIN] Done. Flagged: {flagged}, Explanation: {explanation[:80]}...", file=sys.stderr)
+
+        return jsonify({
+            "prediction": int(flagged),
+            "result": "Injection Detected" if flagged else "Safe",
+            "explanation": explanation
+        })
+
+    except Exception as e:
+        print(f"[ERROR] Exception in /explain: {e}", file=sys.stderr)
+        traceback.print_exc()
+        return jsonify(error="Failed to generate explanation"), 500
+
 
 
 if __name__ == "__main__":

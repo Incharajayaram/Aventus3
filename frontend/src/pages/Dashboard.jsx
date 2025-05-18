@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [isAlert, setIsAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pdfJsLoaded, setPdfJsLoaded] = useState(false);
+  const [reason, setReason] = useState(""); // <-- NEW
 
   useEffect(() => {
     if (window.pdfjsLib) {
@@ -95,11 +96,32 @@ export default function Dashboard() {
 
       const injected = analyzeData.prediction === 1;
       setIsAlert(injected);
+      setReason(injected ? "Fetching explanation..." : "");
       setResponse(
         injected
           ? "⚠️ Prompt-injection suspected!\n\n💡 Rephrase or remove instructions that override system or developer policies."
           : "✅ No injection patterns found.\n\n👍 Looks good, but always double-check sensitive requests."
       );
+
+      // If injection detected, fetch explanation in parallel but don't wait for it
+      if (injected) {
+        fetch("http://localhost:5000/explain", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: inputText }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.explanation) {
+              setReason(data.explanation);
+            } else {
+              setReason(data.error || "No explanation returned.");
+            }
+          })
+          .catch((e) => {
+            setReason(`Explain fetch error: ${e.message}`);
+          });
+      }
 
       // 3. If LLaMA selected AND analyze safe (0), call LLaMA ask API
       if (!injected && selectedModels.includes("LLaMA")) {
@@ -153,7 +175,9 @@ export default function Dashboard() {
           const fullPrompt = `${modelInstruction}Analyze and respond to the following input:\n\n${inputText}`;
 
           const geminiRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${
+              import.meta.env.VITE_GEMINI_API_KEY
+            }`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -293,6 +317,21 @@ export default function Dashboard() {
               response || "The response will appear here."
             )}
           </div>
+          {isAlert && (
+            <>
+              <h3 className="text-yellow-400 text-xl font-bold font-mono text-center">
+                Why it was flagged
+              </h3>
+              <div
+                tabIndex={0}
+                className="h-48 p-4 rounded-lg overflow-auto whitespace-pre-wrap
+                          bg-yellow-900/20 border border-yellow-500 text-yellow-300
+                          shadow-inner font-mono"
+              >
+                {reason || "Analyzing…"}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
