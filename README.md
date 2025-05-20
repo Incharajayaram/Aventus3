@@ -1,4 +1,4 @@
-# PromptShield: Zero-Day Prompt Injection Firewall 
+# PromptArmour: Zero-Day Prompt Injection Firewall 
 
 ## Overview
 
